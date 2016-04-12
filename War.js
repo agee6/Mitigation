@@ -50,3 +50,5 @@ War.prototype.over = function(){
   }
   return false;
 };
+
+module.exports = War;

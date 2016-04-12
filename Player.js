@@ -1,6 +1,6 @@
 var Player = function(name){
   this.countriesOwned = [];
-  this.name = name; 
+  this.name = name;
 
 };
 
@@ -17,3 +17,5 @@ Player.prototype.removeCountry = function(country){
     this.countriesOwned.splice(index,1);
   }
 };
+
+module.exports = Player; 

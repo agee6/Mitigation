@@ -9,8 +9,9 @@
   padding-top:20px;
   box-sizing: border-box;
 
-
-
+}
+.country:hover{
+  cursor:pointer;
 }
 #the-game{
   height: 900px;
@@ -30,8 +31,8 @@
   background-color: rgba(50,100, 150, 0.8);
 }
 #SouthAmerica{
-  left: 400px;
-  top: 600px;
+  left: 430px;
+  top: 550px;
   position: absolute;
   background-color: rgba(150,50,50, 0.8);
 }
@@ -43,27 +44,64 @@
 
 }
 #Asia{
-  left: 1300px;
-  top: 100px;
+  left: 1350px;
+  top: 150px;
   position: absolute;
   background-color: rgba(255,255,0, 0.8);
 }
 #Africa{
-  left: 600px;
-  top: 300px;
+  left: 900px;
+  top: 450px;
   position: absolute;
-  background-color: rgba(200,200,200, 0.8);
+  background-color: rgba(50,80,50, 0.8);
+  color: white;
 }
 #Australia{
-  left: 200px;
-  top: 500px;
+  left: 1550px;
+  top: 600px;
   position: absolute;
-  background-color: rgba(0,200,200, 0.8);
+  background-color: rgba(160,50,150, 0.8);
 
 }
 #MiddleEast{
-  top: 150px;
-  left: 750px;
+  top: 250px;
+  left: 1100px;
   position: absolute;
-  background-color: rgba(200,200,200, 0.8);
+  background-color: rgba(250,160,0, 0.8);
+}
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+}
+
+/* The Close Button */
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
 }
