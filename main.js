@@ -10,7 +10,7 @@ var kick = function(){
   };
 var closeModal = function(event){
   event.preventDefault();
-  modal.style.disply = "none";
+  modal.style.display = "none";
 
 
 };
@@ -21,6 +21,7 @@ var secondKick = function(event){
   closeModal(event);
 
   var game = new Game(UserName, 3);
+  submitName.removeEventListener('click', secondKick); 
   game.startGame();
 };
 

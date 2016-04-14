@@ -6,7 +6,7 @@ function War(aggressor, defendor){
   this.battles = [];
   this.victor = null;
 
-};
+}
 
 War.prototype.isOffense = function(player){
   if(this.aggressor.owner === player){
@@ -30,6 +30,7 @@ War.prototype.updateSoldiers = function(attackMen, defenseMen){
   this.aggressor.troops = this.aggressor.troops - lessOffense;
   this.defender.troops = this.defender.troops - lessDefense;
 };
+
 
 War.prototype.over = function(){
   if(this.defender.men === 0){

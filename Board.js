@@ -23,12 +23,12 @@ function Board(){
 
     Africa.addConnection(MiddleEast, Europe, Hispania);
     Asia.addConnection(Europe, MiddleEast, Australia, NorthAmerica);
-    Europe.addConnection(Africa, MiddleEast, Europe, NorthAmerica);
+    Europe.addConnection(Africa, MiddleEast, Asia, NorthAmerica);
     NorthAmerica.addConnection(Hispania, Europe, Asia);
     Hispania.addConnection(NorthAmerica, Africa);
     MiddleEast.addConnection(Africa, Europe, Asia);
     Australia.addConnection(Asia);
-    
+
     this.countries.push(Africa);
     this.countries.push(Asia);
     this.countries.push(Europe);

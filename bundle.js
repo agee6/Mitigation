@@ -56,7 +56,7 @@
 	  };
 	var closeModal = function(event){
 	  event.preventDefault();
-	  modal.style.disply = "none";
+	  modal.style.display = "none";
 
 
 	};
@@ -67,6 +67,7 @@
 	  closeModal(event);
 
 	  var game = new Game(UserName, 3);
+	  submitName.removeEventListener('click', secondKick); 
 	  game.startGame();
 	};
 
@@ -132,13 +133,29 @@
 	  // }
 	};
 	Game.prototype.fightWars = function(index){
+
 	  for (var i = index; i < this.currentWars.length; i++) {
 	    if(this.currentWars[i].isOffense(this.players[this.currentPlayer])){
 	      this.startBattle(this.currentWars[i], i);
 	      break;
 	    }
 	  }
+	  if(index >= this.currentWars.length || i > this.currentWars.length){
+	    this.players[this.currentPlayer].wantToWar(this.checkToWar.bind(this));
 
+	  }
+
+
+	};
+	Game.prototype.checkToWar = function(toFightWar){
+	  if(toFightWar){
+	    this.instructionsDiv.innerHTML =
+	      "choose from which country you will be attacking";
+	    this.players[this.currentPlayer].startWar(this.board, this.initiateWar.bind(this));
+
+	  }else{
+	    this.players[this.currentPlayer].wantToMove( this.checkToMove.bind(this));
+	  }
 
 	};
 
@@ -179,12 +196,14 @@
 	Game.prototype.startBattle = function(war, index){
 	  this.soldiersAttack = 0;
 	  this.soldiersDefend = 0;
-	  war.attackPlayer.getAttackSoldiers(war, index, this.getDefense);
+	  this.instructionsDiv.innerHTML = "";
+	  war.aggressor.owner.getAttackSoldiers(war, index, this.getDefense);
 
 	};
 	Game.prototype.getDefense = function(war, index, attackSoldiers){
 	  this.soldiersAttack = attackSoldiers;
-	  war.defensePlayer.getDefensePlayers(war, index, this.battle);
+	  debugger;
+	  war.defender.owner.getDefenseSoldiers(war, index, this.battle);
 	};
 
 	Game.prototype.battle = function(war, index, defenseSoldiers){
@@ -203,7 +222,7 @@
 	    index += 1;
 	    this.fightWars(index);
 	  }else{
-
+	    debugger;
 
 	  }
 
@@ -267,20 +286,17 @@
 	    "click on the country to place 1 soldiers on that country";
 	  this.rotatePlayers();
 	  this.board.update();
-	  debugger; 
+
 	  var totalSoldiers = numberToPlace;
 	  if(totalSoldiers > 0){
 	    totalSoldiers -= 1;
 	    this.players[this.currentPlayer].placeSoldiers(1, this.placeSecondSoldiers.bind(this), totalSoldiers);
 	  }else {
+	    this.instructionsDiv.innerHTML = "";
 	    this.fightWars(0);
 	  }
 
 	};
-
-
-
-
 
 	Game.prototype.distributeSoldiers = function(){
 	  //player recieves and places soldiers on countries at the start of turn.
@@ -290,23 +306,13 @@
 	  this.players[this.currenPlayer].placeSoldiers(numberPlayers);
 	};
 
-	Game.prototype.checkInitiateWar = function(){
 
-	  // this.instructionsDiv.innerHTML = "would you like to initiate a war?";
-	  var stay = window.confirm("would you like to initiate a War?");
-
-	  if(stay){
-	    return true;
-	  }else{
-	    return false;
-	  }
-	  //checks if a player wants to initiate a war, returns true or false
-	};
-
-	Game.prototype.initiateWar = function(){
+	Game.prototype.initiateWar = function(war){
 	  //creates new war object where current player is the aggressor and chooses
 	  //defender. Adds war object to the current wars array.
-	  this.currentWars.push(this.players[this.currentPlayer].startWar(this.board));
+
+	  this.currentWars.push(war);
+	  this.fightWars(this.currentWars.length-1);
 
 	};
 
@@ -368,12 +374,12 @@
 
 	    Africa.addConnection(MiddleEast, Europe, Hispania);
 	    Asia.addConnection(Europe, MiddleEast, Australia, NorthAmerica);
-	    Europe.addConnection(Africa, MiddleEast, Europe, NorthAmerica);
+	    Europe.addConnection(Africa, MiddleEast, Asia, NorthAmerica);
 	    NorthAmerica.addConnection(Hispania, Europe, Asia);
 	    Hispania.addConnection(NorthAmerica, Africa);
 	    MiddleEast.addConnection(Africa, Europe, Asia);
 	    Australia.addConnection(Asia);
-	    
+
 	    this.countries.push(Africa);
 	    this.countries.push(Asia);
 	    this.countries.push(Europe);
@@ -429,6 +435,9 @@
 	Country.prototype.addConnection = function(){
 	  this.connections = this.connections.concat(arguments);
 	};
+	Country.prototype.neighbors = function(){
+	  return(this.connections); 
+	};
 
 	Country.prototype.update = function(){
 	  if(this.owner !== null){
@@ -446,6 +455,7 @@
 
 	var Player = __webpack_require__(5);
 	var util = __webpack_require__(6);
+	var War = __webpack_require__(9);
 
 	function HumanPlayer(options){
 	  Player.call(this,options);
@@ -478,7 +488,7 @@
 	};
 
 	HumanPlayer.prototype.placeSoldiers = function(num, callBack, soldiersRemaining){
-	  
+
 	  var that = this;
 	  var addMen = function(event){
 	    event.preventDefault();
@@ -504,23 +514,118 @@
 	  }
 	};
 
-	HumanPlayer.prototype.startWar = function(board){
-	  var attackSet = false;
-	  var defenseSet = false;
-	  var attacker = null;
+	HumanPlayer.prototype.startWar = function(board, callback){
+
 	  var defender = null;
+	  var attacker = null;
+	  var that = this;
 	  var setAttack = function(event){
-	    attacker = event.target;
+	    var attackDiv = event.target;
+	    attacker = that.getCountryFromDiv(attackDiv);
+	    for (var i = 0; i < that.countriesOwned.length; i++) {
+	      that.countriesOwned[i].div.addEventListener('click',setAttack);
+	    }
+	    setDefense();
 	  };
 	  for (var i = 0; i < this.countriesOwned.length; i++) {
 	    this.countriesOwned[i].div.addEventListener('click',setAttack);
 	  }
+	  var setDefense = function(){
+	    for (var j = 0; j < attacker.connections[0].length; j++) {
+	      attacker.connections[0][j].div.addEventListener('click', sendAttack);
+	      attacker.connections[0][j].div.classList.add('glow');
+	    }
+	    document.getElementById('instruction-div').innerHTML =
+	      "Choose which country you would like to attack";
+
+	  };
+	  var sendAttack = function(){
+	    var defenseDiv = event.target;
+	    defender = that.getCountryFromDiv(defenseDiv);
+	    var war = new War(attacker, defender);
+	    callback(war);
+
+	  };
+	};
+
+	HumanPlayer.prototype.wantToWar = function(callback){
+	  var stay = window.confirm("would you like to initiate a War?");
+
+	  if(stay){
+	    callback(true);
+	  }else{
+	    callback(false);
+	  }
+	};
+
+	HumanPlayer.prototype.getAttackSoldiers = function(war, index, callback){
+	  var instructDiv = document.getElementById('input-label');
+	  var input = document.getElementById('user-input');
+	  var inputBut = document.getElementById('user-input-button');
+	  input.value = 1;
+	  var inputVal;
+	  var max = war.aggressor.troops - 1;
+	  var modal = document.getElementById('myModal');
+	  modal.style.display = "block";
+	  var instructString =
+	    "Enter how many soldiers you want to send to war(min: 1, max: " + max + ")";
+	  instructDiv.innerHTML = instructString;
+
+	  var validateInput = function(event){
+	    debugger;
+	    event.preventDefault();
+	    inputVal = parseInt(input.value);
+	    if(inputVal > 0 && inputVal <= max){
+	      inputBut.removeEventListener('click', validateInput);
+	      modal.style.display = "none";
+	      debugger;
+	      callback(war, index, inputVal);
+	    }else{
+	      instructDiv.innerHTML =
+	      "invalid input please enter a number between 1 and " + max + ".";
+
+	    }
+
+	  };
+	  inputBut.addEventListener('click', validateInput);
+
 
 
 	};
+	HumanPlayer.prototype.getDefenseSoldiers = function(war, index, callback){
+	  var instructDiv = document.getElementById('input-label');
+	  var input = document.getElementById('user-input');
+	  var inputBut = document.getElementById('user-input-button');
+	  input.value = 1;
+	  var inputVal;
+	  var max = war.defender.troops;
+	  var modal = document.getElementById('myModal');
+	  modal.style.display = "block";
+	  var instructString =
+	    "Enter how many soldiers you want to use to defend(min: 1, max: " + max + ")";
+	  instructDiv.innerHTML = instructString;
+
+	  var validateInput = function(event){
+	    debugger;
+	    event.preventDefault();
+	    inputVal = parseInt(input.value);
+	    if(inputVal > 0 && inputVal <= max){
+	      inputBut.removeEventListener('click', validateInput);
+	      modal.style.display = "none";
+	      debugger;
+	      callback(war, index, inputVal);
+	    }else{
+	      instructDiv.innerHTML =
+	      "invalid input please enter a number between 1 and " + max + ".";
+
+	    }
+
+	  };
+	  inputBut.addEventListener('click', validateInput);
 
 
 
+	};
 
 
 	HumanPlayer.prototype.type = "HumanPlayer";
@@ -581,6 +686,7 @@
 
 	var Player = __webpack_require__(5);
 	var util = __webpack_require__(6);
+	var War = __webpack_require__(9);
 
 
 	function ComputerPlayer(options){
@@ -599,7 +705,7 @@
 	  chosen.troops = 1;
 	  board.removeUnclaimed(chosen);
 	  board.update();
-	  
+
 	  callBack();
 
 	};
@@ -614,11 +720,92 @@
 	ComputerPlayer.prototype.startWar = function(board, callback){
 	  var rIdx = Math.floor(Math.random()*(this.countriesOwned.length));
 	  var chosen = this.countriesOwned[rIdx];
-	  var r2idx = Math.floor(Math.random()*(chosen.neighbors.length));
-	  var defendor = chosen.neighbors[r2idx];
+	  var r2idx = Math.floor(Math.random()*(chosen.connections[0].length));
+	  var defendor = chosen.connections[0][r2idx];
+	  var war = new War(chosen, defendor);
+	  callback(war);
 
 	};
+	ComputerPlayer.prototype.wantToWar = function(callback){
+	  var choice = Math.random();
+	  if(choice > 0.5 ){
+	    callback(true);
+	  }else {
+	    callback(false);
+	  }
+	};
+	ComputerPlayer.prototype.getAttackSoldiers = function(war, index, callback){
+	  var choice = Math.floor(Math.random() * war.aggressor.troops) + 1;
+	  callback(war, index, choice);
+	};
+	ComputerPlayer.prototype.getDefenseSoldiers = function(war, index, callback){
+	  var choice = Math.floor(Math.random() * (war.defender.troops + 1)) + 1;
+	  callback(war, index, choice);
+	};
+
 	module.exports = ComputerPlayer;
+
+
+/***/ },
+/* 8 */,
+/* 9 */
+/***/ function(module, exports) {
+
+	
+
+	function War(aggressor, defendor){
+	  this.aggressor = aggressor;
+	  this.defender = defendor;
+	  this.battles = [];
+	  this.victor = null;
+
+	}
+
+	War.prototype.isOffense = function(player){
+	  if(this.aggressor.owner === player){
+	    return true;
+	  }else {
+	    return false;
+	  }
+	};
+
+	War.prototype.addAttackVictory = function(){
+	    this.battles.push(1);
+	};
+
+	War.prototype.addDefenseVictory = function(){
+	  this.battles.push(0);
+	};
+
+	War.prototype.updateSoldiers = function(attackMen, defenseMen){
+	  var lessOffense = Math.ceil(attackMen/2);
+	  var lessDefense = Math.ceil(defenseMen/2);
+	  this.aggressor.troops = this.aggressor.troops - lessOffense;
+	  this.defender.troops = this.defender.troops - lessDefense;
+	};
+
+
+	War.prototype.over = function(){
+	  if(this.defender.men === 0){
+	    this.aggressor.owner.claimCountry(this.aggressor,this.defender);
+	    return true;
+	  }
+	  var arrSum = 0;
+	  this.battles.forEach(function(battle){
+	    arrSum += battle;
+	  });
+	  if(arrSum === 2){
+	    this.aggressor.owner.claimCountry(this.defender);
+	    return true;
+	  }
+	  if(this.battles.length === 3 ){
+	    return true;
+
+	  }
+	  return false;
+	};
+
+	module.exports = War;
 
 
 /***/ }

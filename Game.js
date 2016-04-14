@@ -30,13 +30,29 @@ Game.prototype.startGame = function(){
   // }
 };
 Game.prototype.fightWars = function(index){
+
   for (var i = index; i < this.currentWars.length; i++) {
     if(this.currentWars[i].isOffense(this.players[this.currentPlayer])){
       this.startBattle(this.currentWars[i], i);
       break;
     }
   }
+  if(index >= this.currentWars.length || i > this.currentWars.length){
+    this.players[this.currentPlayer].wantToWar(this.checkToWar.bind(this));
 
+  }
+
+
+};
+Game.prototype.checkToWar = function(toFightWar){
+  if(toFightWar){
+    this.instructionsDiv.innerHTML =
+      "choose from which country you will be attacking";
+    this.players[this.currentPlayer].startWar(this.board, this.initiateWar.bind(this));
+
+  }else{
+    this.players[this.currentPlayer].wantToMove( this.checkToMove.bind(this));
+  }
 
 };
 
@@ -77,12 +93,14 @@ Game.prototype.rotatePlayers = function(){
 Game.prototype.startBattle = function(war, index){
   this.soldiersAttack = 0;
   this.soldiersDefend = 0;
-  war.attackPlayer.getAttackSoldiers(war, index, this.getDefense);
+  this.instructionsDiv.innerHTML = "";
+  war.aggressor.owner.getAttackSoldiers(war, index, this.getDefense);
 
 };
 Game.prototype.getDefense = function(war, index, attackSoldiers){
   this.soldiersAttack = attackSoldiers;
-  war.defensePlayer.getDefensePlayers(war, index, this.battle);
+  debugger;
+  war.defender.owner.getDefenseSoldiers(war, index, this.battle);
 };
 
 Game.prototype.battle = function(war, index, defenseSoldiers){
@@ -101,7 +119,7 @@ Game.prototype.battle = function(war, index, defenseSoldiers){
     index += 1;
     this.fightWars(index);
   }else{
-
+    debugger;
 
   }
 
@@ -165,20 +183,17 @@ Game.prototype.placeSecondSoldiers = function(numberToPlace){
     "click on the country to place 1 soldiers on that country";
   this.rotatePlayers();
   this.board.update();
-  debugger; 
+
   var totalSoldiers = numberToPlace;
   if(totalSoldiers > 0){
     totalSoldiers -= 1;
     this.players[this.currentPlayer].placeSoldiers(1, this.placeSecondSoldiers.bind(this), totalSoldiers);
   }else {
+    this.instructionsDiv.innerHTML = "";
     this.fightWars(0);
   }
 
 };
-
-
-
-
 
 Game.prototype.distributeSoldiers = function(){
   //player recieves and places soldiers on countries at the start of turn.
@@ -188,23 +203,13 @@ Game.prototype.distributeSoldiers = function(){
   this.players[this.currenPlayer].placeSoldiers(numberPlayers);
 };
 
-Game.prototype.checkInitiateWar = function(){
 
-  // this.instructionsDiv.innerHTML = "would you like to initiate a war?";
-  var stay = window.confirm("would you like to initiate a War?");
-
-  if(stay){
-    return true;
-  }else{
-    return false;
-  }
-  //checks if a player wants to initiate a war, returns true or false
-};
-
-Game.prototype.initiateWar = function(){
+Game.prototype.initiateWar = function(war){
   //creates new war object where current player is the aggressor and chooses
   //defender. Adds war object to the current wars array.
-  this.currentWars.push(this.players[this.currentPlayer].startWar(this.board));
+
+  this.currentWars.push(war);
+  this.fightWars(this.currentWars.length-1);
 
 };
 

@@ -10,6 +10,9 @@ function Country(div){
 Country.prototype.addConnection = function(){
   this.connections = this.connections.concat(arguments);
 };
+Country.prototype.neighbors = function(){
+  return(this.connections); 
+};
 
 Country.prototype.update = function(){
   if(this.owner !== null){
