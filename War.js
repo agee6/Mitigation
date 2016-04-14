@@ -1,6 +1,6 @@
 
 
-var War = function(aggressor, defendor){
+function War(aggressor, defendor){
   this.aggressor = aggressor;
   this.defender = defendor;
   this.battles = [];

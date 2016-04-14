@@ -1,9 +1,9 @@
 var Board = require('./Board.js');
 var HumanPlayer = require('./HumanPlayer.js');
 var ComputerPlayer = require('./ComputerPlayer.js');
+window.HumanPlayer = HumanPlayer;
 
-
-var Game = function(name, numPlayers){
+function Game(name, numPlayers){
   this.board = new Board();
   this.playersName = name;
   this.players = [];
@@ -15,27 +15,34 @@ var Game = function(name, numPlayers){
   this.mainButton = document.getElementById('main-button');
   this.numPlayers = numPlayers;
   this.instructionsDiv = document.getElementById('instruction-div');
-};
+  this.turnDiv = document.getElementById('turnDiv');
+}
 
 Game.prototype.startGame = function(){
+  debugger;
   this.getPlayers();
   this.setBoard();
-  this.gameOver = true;
-  while(!this.gameOver){
-    this.playTurn();
-    this.rotatePlayers();
-
+  // this.gameOver = true;
+  // while(!this.gameOver){
+  //   this.playTurn();
+  //   this.rotatePlayers();
+  //
+  // }
+};
+Game.prototype.fightWars = function(index){
+  for (var i = index; i < this.currentWars.length; i++) {
+    if(this.currentWars[i].isOffense(this.players[this.currentPlayer])){
+      this.startBattle(this.currentWars[i], i);
+      break;
+    }
   }
+
+
 };
 
 Game.prototype.playTurn = function(){
 
-  this.distributeSoldiers();
-  for (var i = 0; i < this.currentWars.length; i++) {
-    if(this.currentWars[i].isOffense(this.players[this.currentPlayer])){
-      this.battle(this.currentWars[i]);
-    }
-  }
+  // this.distributeSoldiers();
   var wantToWar = true;
   while (wantToWar){
     if(this.checkInitiateWar()){
@@ -62,21 +69,39 @@ Game.prototype.playTurn = function(){
 Game.prototype.rotatePlayers = function(){
 
   this.currentPlayer = (this.currentPlayer + 1) % this.players.length;
+  this.turnDiv.innerHTML = 'It is ' + this.players[this.currentPlayer].name + '\'s turn';
+
 
 };
+Game.prototype.startBattle = function(war, index){
+  this.soldiersAttack = 0;
+  this.soldiersDefend = 0;
+  war.attackPlayer.getAttackSoldiers(war, index, this.getDefense);
 
-Game.prototype.battle = function(war){
-  var soldiersAttack = war.attackPlayer.getSoldiers();
-  var soldiersDefend = war.playerTwo.getSoldiers();
-  if(soldiersAttack > soldiersDefend){
+};
+Game.prototype.getDefense = function(war, index, attackSoldiers){
+  this.soldiersAttack = attackSoldiers;
+  war.defensePlayer.getDefensePlayers(war, index, this.battle);
+};
+
+Game.prototype.battle = function(war, index, defenseSoldiers){
+  this.soldiersDefend = defenseSoldiers;
+  if(this.soldiersAttack > this.soldiersDefend){
     war.addAttackVictory();
   }else {
     war.addDefenseVictory();
   }
-  war.updateSoldiers(soldiersAttack, soldiersDefend);
+  war.updateSoldiers(this.soldiersAttack, this.soldiersDefend);
   if(war.over()){
 
     this.removeWar(war);
+  }
+  if(index < this.currentWars.length){
+    index += 1;
+    this.fightWars(index);
+  }else{
+
+
   }
 
 };
@@ -102,33 +127,48 @@ Game.prototype.getPlayers = function(){
 };
 Game.prototype.setBoard = function(){
   //rotate through players, choosing countries.
+  this.rotatePlayers();
   var instructionDiv = document.getElementById('instruction-div');
   var turnDiv = document.getElementById('turnDiv');
   instructionDiv.innerHTML = "Please click on the country of your choice when it is your turn";
-
-  while(this.board.unclaimedCountries() > 0 ){
-    turnDiv='It is ' + this.players[this.currentPlayer].name + '\'s turn';
-    this.players.currentPlayer.claimUnclaimed(this.board);
-    this.rotatePlayers();
-
-  }
-  instructionDiv.innerHTML = "click on the country to place 2 soldiers on that country";
-
-  var totalSoldiers = 30;
-  while(totalSoldiers > this.numPlayers){
-    this.players.currentPlayer.placeSoldiers(2);
-    this.rotatePlayers();
-    totalSoldiers -= 2;
-  }
-  instructionDiv.innerHTML = "click on the country to place 1 soldiers on that country";
-
-  while(totalSoldiers > 0){
-    this.players.currentPlayer.placeSoldiers(1);
-    this.rotatePlayers();
-    totalSoldiers -= 1;
+  turnDiv.innerHTML ='It is ' + this.players[this.currentPlayer].name + '\'s turn';
+  if(this.board.unclaimedCountries()> 0 ){
+    this.players.currentPlayer.claimedUnclaimed(this.board, this.setBoard);
+  }else {
+    this.placeFirstSoldiers(50);
   }
 
 };
+Game.prototype.placeFirstSoldiers = function(numberToPlace){
+  this.instructionsDiv.innerHTML = "click on the country to place 2 soldiers on that country";
+  this.rotatePlayers();
+
+  var totalSoldiers = numberToPlace;
+  if( totalSoldiers > this.numPlayers){
+    totalSoldiers -= 2;
+    this.players.currentPlayer.placeSoldiers(2, this.placeFirstSoldier, totalSoldiers);
+
+  }else {
+    this.placeSecondSoldiers(totalSoldiers);
+  }
+
+};
+Game.prototype.placeSecondSoldiers = function(numberToPlace){
+  this.instructionsDiv.innerHTML = "click on the country to place 1 soldiers on that country";
+  this.rotatePlayers();
+  var totalSoldiers = numberToPlace;
+  if(totalSoldiers > 0){
+    totalSoldiers -= 1;
+    this.players.currentPlayer.placeSoldiers(1, this.placeSecondSoldiers, totalSoldiers );
+  }else {
+    this.fightWars(0);
+  }
+
+};
+
+
+
+
 
 Game.prototype.distributeSoldiers = function(){
   //player recieves and places soldiers on countries at the start of turn.

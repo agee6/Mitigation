@@ -1,8 +1,8 @@
-var Player = function(name){
+function Player(name){
   this.countriesOwned = [];
   this.name = name;
 
-};
+}
 
 Player.prototype.claimCountry = function(fromCountry, toCountry){
   this.countries.Owned.push(toCountry);
@@ -17,5 +17,8 @@ Player.prototype.removeCountry = function(country){
     this.countriesOwned.splice(index,1);
   }
 };
+Player.prototype.numOwned = function(){
+  return this.countriesOwned.length;
+};
 
-module.exports = Player; 
+module.exports = Player;

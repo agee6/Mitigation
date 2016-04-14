@@ -1,5 +1,5 @@
 var Country = require('./Country.js');
-var Board = function(){
+function Board(){
     this.countries = [];
     var NADiv = document.getElementById('NorthAmerica');
     var SADiv = document.getElementById('SouthAmerica');
@@ -36,6 +36,6 @@ var Board = function(){
     this.countries.push(Hispania);
     this.countries.push(MiddleEast);
     this.countries.push(Australia);
-};
+}
 
 module.exports = Board;

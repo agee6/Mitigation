@@ -100,10 +100,10 @@
 
 	var Board = __webpack_require__(2);
 	var HumanPlayer = __webpack_require__(4);
-	var ComputerPlayer = __webpack_require__(5);
+	var ComputerPlayer = __webpack_require__(7);
+	window.HumanPlayer = HumanPlayer;
 
-
-	var Game = function(name, numPlayers){
+	function Game(name, numPlayers){
 	  this.board = new Board();
 	  this.playersName = name;
 	  this.players = [];
@@ -115,27 +115,34 @@
 	  this.mainButton = document.getElementById('main-button');
 	  this.numPlayers = numPlayers;
 	  this.instructionsDiv = document.getElementById('instruction-div');
-	};
+	  this.turnDiv = document.getElementById('turnDiv');
+	}
 
 	Game.prototype.startGame = function(){
+	  debugger;
 	  this.getPlayers();
 	  this.setBoard();
-	  this.gameOver = true;
-	  while(!this.gameOver){
-	    this.playTurn();
-	    this.rotatePlayers();
-
+	  // this.gameOver = true;
+	  // while(!this.gameOver){
+	  //   this.playTurn();
+	  //   this.rotatePlayers();
+	  //
+	  // }
+	};
+	Game.prototype.fightWars = function(index){
+	  for (var i = index; i < this.currentWars.length; i++) {
+	    if(this.currentWars[i].isOffense(this.players[this.currentPlayer])){
+	      this.startBattle(this.currentWars[i], i);
+	      break;
+	    }
 	  }
+
+
 	};
 
 	Game.prototype.playTurn = function(){
 
-	  this.distributeSoldiers();
-	  for (var i = 0; i < this.currentWars.length; i++) {
-	    if(this.currentWars[i].isOffense(this.players[this.currentPlayer])){
-	      this.battle(this.currentWars[i]);
-	    }
-	  }
+	  // this.distributeSoldiers();
 	  var wantToWar = true;
 	  while (wantToWar){
 	    if(this.checkInitiateWar()){
@@ -162,21 +169,39 @@
 	Game.prototype.rotatePlayers = function(){
 
 	  this.currentPlayer = (this.currentPlayer + 1) % this.players.length;
+	  this.turnDiv.innerHTML = 'It is ' + this.players[this.currentPlayer].name + '\'s turn';
+
 
 	};
+	Game.prototype.startBattle = function(war, index){
+	  this.soldiersAttack = 0;
+	  this.soldiersDefend = 0;
+	  war.attackPlayer.getAttackSoldiers(war, index, this.getDefense);
 
-	Game.prototype.battle = function(war){
-	  var soldiersAttack = war.attackPlayer.getSoldiers();
-	  var soldiersDefend = war.playerTwo.getSoldiers();
-	  if(soldiersAttack > soldiersDefend){
+	};
+	Game.prototype.getDefense = function(war, index, attackSoldiers){
+	  this.soldiersAttack = attackSoldiers;
+	  war.defensePlayer.getDefensePlayers(war, index, this.battle);
+	};
+
+	Game.prototype.battle = function(war, index, defenseSoldiers){
+	  this.soldiersDefend = defenseSoldiers;
+	  if(this.soldiersAttack > this.soldiersDefend){
 	    war.addAttackVictory();
 	  }else {
 	    war.addDefenseVictory();
 	  }
-	  war.updateSoldiers(soldiersAttack, soldiersDefend);
+	  war.updateSoldiers(this.soldiersAttack, this.soldiersDefend);
 	  if(war.over()){
 
 	    this.removeWar(war);
+	  }
+	  if(index < this.currentWars.length){
+	    index += 1;
+	    this.fightWars(index);
+	  }else{
+
+
 	  }
 
 	};
@@ -202,33 +227,48 @@
 	};
 	Game.prototype.setBoard = function(){
 	  //rotate through players, choosing countries.
+	  this.rotatePlayers();
 	  var instructionDiv = document.getElementById('instruction-div');
 	  var turnDiv = document.getElementById('turnDiv');
 	  instructionDiv.innerHTML = "Please click on the country of your choice when it is your turn";
-
-	  while(this.board.unclaimedCountries() > 0 ){
-	    turnDiv='It is ' + this.players[this.currentPlayer].name + '\'s turn';
-	    this.players.currentPlayer.claimUnclaimed(this.board);
-	    this.rotatePlayers();
-
-	  }
-	  instructionDiv.innerHTML = "click on the country to place 2 soldiers on that country";
-
-	  var totalSoldiers = 30;
-	  while(totalSoldiers > this.numPlayers){
-	    this.players.currentPlayer.placeSoldiers(2);
-	    this.rotatePlayers();
-	    totalSoldiers -= 2;
-	  }
-	  instructionDiv.innerHTML = "click on the country to place 1 soldiers on that country";
-
-	  while(totalSoldiers > 0){
-	    this.players.currentPlayer.placeSoldiers(1);
-	    this.rotatePlayers();
-	    totalSoldiers -= 1;
+	  turnDiv.innerHTML ='It is ' + this.players[this.currentPlayer].name + '\'s turn';
+	  if(this.board.unclaimedCountries()> 0 ){
+	    this.players.currentPlayer.claimedUnclaimed(this.board, this.setBoard);
+	  }else {
+	    this.placeFirstSoldiers(50);
 	  }
 
 	};
+	Game.prototype.placeFirstSoldiers = function(numberToPlace){
+	  this.instructionsDiv.innerHTML = "click on the country to place 2 soldiers on that country";
+	  this.rotatePlayers();
+
+	  var totalSoldiers = numberToPlace;
+	  if( totalSoldiers > this.numPlayers){
+	    totalSoldiers -= 2;
+	    this.players.currentPlayer.placeSoldiers(2, this.placeFirstSoldier, totalSoldiers);
+
+	  }else {
+	    this.placeSecondSoldiers(totalSoldiers);
+	  }
+
+	};
+	Game.prototype.placeSecondSoldiers = function(numberToPlace){
+	  this.instructionsDiv.innerHTML = "click on the country to place 1 soldiers on that country";
+	  this.rotatePlayers();
+	  var totalSoldiers = numberToPlace;
+	  if(totalSoldiers > 0){
+	    totalSoldiers -= 1;
+	    this.players.currentPlayer.placeSoldiers(1, this.placeSecondSoldiers, totalSoldiers );
+	  }else {
+	    this.fightWars(0);
+	  }
+
+	};
+
+
+
+
 
 	Game.prototype.distributeSoldiers = function(){
 	  //player recieves and places soldiers on countries at the start of turn.
@@ -291,7 +331,7 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var Country = __webpack_require__(3);
-	var Board = function(){
+	function Board(){
 	    this.countries = [];
 	    var NADiv = document.getElementById('NorthAmerica');
 	    var SADiv = document.getElementById('SouthAmerica');
@@ -328,7 +368,7 @@
 	    this.countries.push(Hispania);
 	    this.countries.push(MiddleEast);
 	    this.countries.push(Australia);
-	};
+	}
 
 	module.exports = Board;
 
@@ -339,31 +379,186 @@
 
 	
 
-	var Country = function(div){
+	function Country(div){
 	  this.owner = null;
 	  this.troops = 0;
 	  this.connections = [];
 	  this.div = div;
-	};
+	}
 
 	Country.prototype.addConnection = function(){
 	  this.connections = this.connections.concat(arguments);
 	};
 
-	module.exports = Country; 
+	module.exports = Country;
 
 
 /***/ },
 /* 4 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
-	
+	var Player = __webpack_require__(5);
+	var util = __webpack_require__(6);
+
+
+
+
+	function HumanPlayer(name){
+	  this.name = name;
+	}
+
+	HumanPlayer.prototype.claimUnclaimed = function(board){
+	  var chosen = false;
+	  var countriesToAdd = board.unclaimedCountries();
+	  var that = this;
+	  var addCountry = function(event){
+	    var country = event.target;
+	    this.countriesOwned.push(country);
+	    country.owner = that;
+	    country.troops = 1;
+	    chosen = true;
+	    board.update();
+	  };
+	  for (var i = 0; i < countriesToAdd.length; i++) {
+	    countriesToAdd[i].div.addEventListener('click', addCountry);
+	  }
+
+	  while(!chosen){
+
+	  }
+
+
+	};
+
+	HumanPlayer.prototype.placeSoldiers = function(num){
+	  var placed = false;
+	  var addMen = function(event){
+	    event.preventDefault();
+	    event.target.troops += num;
+	    placed = true;
+	  };
+	  for (var i = 0; i < this.countriesOwned.length; i++) {
+	    this.countriesOwned[i].div.addEventListener('click',addMen);
+	  }
+	  while(!placed){
+
+	  }
+
+	};
+
+	HumanPlayer.prototype.startWar = function(board){
+	  var attackSet = false;
+	  var defenseSet = false;
+	  var attacker = null;
+	  var defender = null;
+	  var setAttack = function(event){
+	    attacker = event.target;
+	  };
+	  for (var i = 0; i < this.countriesOwned.length; i++) {
+	    this.countriesOwned[i].div.addEventListener('click',setAttack);
+	  }
+	  while(!attackSet){
+
+	  }
+
+	};
+
+
+
+	util.inherits(HumanPlayer, Player);
+
+	module.exports = HumanPlayer; 
+
 
 /***/ },
 /* 5 */
 /***/ function(module, exports) {
 
-	
+	function Player(name){
+	  this.countriesOwned = [];
+	  this.name = name;
+
+	}
+
+	Player.prototype.claimCountry = function(fromCountry, toCountry){
+	  this.countries.Owned.push(toCountry);
+	  toCountry.owner.removeCountry(toCountry);
+	  toCountry.owner = this;
+	  //prompt to user to get number of soldiers to move from
+	  //fromCountry to toCountry
+	};
+	Player.prototype.removeCountry = function(country){
+	  var index = this.countriesOwned.indexOf(country);
+	  if(index >= 0){
+	    this.countriesOwned.splice(index,1);
+	  }
+	};
+	Player.prototype.numOwned = function(){
+	  return this.countriesOwned.length;
+	};
+
+	module.exports = Player;
+
+
+/***/ },
+/* 6 */
+/***/ function(module, exports) {
+
+	var Util = {
+
+
+	  inherits: function(ChildClass, BaseClass){
+	    function Surrogate(){this.constructor = ChildClass;}
+	    Surrogate.prototype = BaseClass.prototype;
+	    ChildClass.prototype = new Surrogate();
+	  }
+	};
+
+	module.exports = Util;
+
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Player = __webpack_require__(5);
+	var util = __webpack_require__(6);
+
+
+	function ComputerPlayer(name){
+
+	}
+
+	ComputerPlayer.prototype.claimUnclaimed = function(board, callback){
+	  var countriesToAdd = board.unclaimedCountries();
+	  var rIdx = Math.floor(Math.random()*(countriesToAdd.length));
+	  var chosen = countriesToAdd[rIdx];
+	  this.countriesOwned.push(chosen);
+	  chosen.owner = this;
+	  chosen.troops = 1;
+	  board.update();
+
+
+
+	};
+
+	ComputerPlayer.prototype.placeSoldiers = function(num, callback){
+	  var rIdx = Math.floor(Math.random()*(this.countriesOwned.length));
+	  var chosen = this.countriesOwned[rIdx];
+	  chosen.troops += num;
+
+	};
+
+	ComputerPlayer.prototype.startWar = function(board, callback){
+	  var rIdx = Math.floor(Math.random()*(this.countriesOwned.length));
+	  var chosen = this.countriesOwned[rIdx];
+	  var r2idx = Math.floor(Math.random()*(chosen.neighbors.length));
+	  var defendor = chosen.neighbors[r2idx];
+
+	};
+	util.inherits(ComputerPlayer, Player);
+	module.exports = ComputerPlayer;
+
 
 /***/ }
 /******/ ]);
