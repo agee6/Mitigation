@@ -12,11 +12,13 @@ var closeModal = function(event){
   event.preventDefault();
   modal.style.disply = "none";
 
+
 };
-var secondKick = function(){
+var secondKick = function(event){
 
   var userInput = document.getElementById('user-input');
   var UserName = userInput.value;
+  closeModal(event);
 
   var game = new Game(UserName, 3);
   game.startGame();

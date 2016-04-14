@@ -8,7 +8,7 @@ function Game(name, numPlayers){
   this.playersName = name;
   this.players = [];
   this.currentWars=[];
-  this.currentPlayer = 0;
+  this.currentPlayer = numPlayers - 1;
   this.gameOver = false;
   this.inputDiv = document.getElementById("user-input");
   this.gameDiv = document.getElementById('the-game');
@@ -19,7 +19,7 @@ function Game(name, numPlayers){
 }
 
 Game.prototype.startGame = function(){
-  debugger;
+
   this.getPlayers();
   this.setBoard();
   // this.gameOver = true;
@@ -69,8 +69,9 @@ Game.prototype.playTurn = function(){
 Game.prototype.rotatePlayers = function(){
 
   this.currentPlayer = (this.currentPlayer + 1) % this.players.length;
-  this.turnDiv.innerHTML = 'It is ' + this.players[this.currentPlayer].name + '\'s turn';
 
+  this.turnDiv.innerHTML =
+  'It is ' + this.players[this.currentPlayer].name + '\'s turn';
 
 };
 Game.prototype.startBattle = function(war, index){
@@ -121,32 +122,38 @@ Game.prototype.getPlayers = function(){
     }
   }
 
-
   //get the players
 
 };
 Game.prototype.setBoard = function(){
   //rotate through players, choosing countries.
-  this.rotatePlayers();
+  // this.rotatePlayers();
+
   var instructionDiv = document.getElementById('instruction-div');
-  var turnDiv = document.getElementById('turnDiv');
-  instructionDiv.innerHTML = "Please click on the country of your choice when it is your turn";
-  turnDiv.innerHTML ='It is ' + this.players[this.currentPlayer].name + '\'s turn';
-  if(this.board.unclaimedCountries()> 0 ){
-    this.players.currentPlayer.claimedUnclaimed(this.board, this.setBoard);
+  // var turnDiv = document.getElementById('turnDiv');
+  this.rotatePlayers();
+  instructionDiv.innerHTML =
+    "Please click on the country of your choice when it is your turn";
+
+  if(this.board.unclaimedCountries.length> 0 ){
+
+    this.players[this.currentPlayer].claimUnclaimed(this.board, this.setBoard.bind(this));
+
   }else {
     this.placeFirstSoldiers(50);
   }
 
 };
 Game.prototype.placeFirstSoldiers = function(numberToPlace){
-  this.instructionsDiv.innerHTML = "click on the country to place 2 soldiers on that country";
+  this.instructionsDiv.innerHTML =
+    "click on the country to place 3 soldiers on that country";
   this.rotatePlayers();
+  this.board.update();
 
   var totalSoldiers = numberToPlace;
   if( totalSoldiers > this.numPlayers){
-    totalSoldiers -= 2;
-    this.players.currentPlayer.placeSoldiers(2, this.placeFirstSoldier, totalSoldiers);
+    totalSoldiers -= 3;
+    this.players[this.currentPlayer].placeSoldiers(3, this.placeFirstSoldiers.bind(this), totalSoldiers);
 
   }else {
     this.placeSecondSoldiers(totalSoldiers);
@@ -154,12 +161,15 @@ Game.prototype.placeFirstSoldiers = function(numberToPlace){
 
 };
 Game.prototype.placeSecondSoldiers = function(numberToPlace){
-  this.instructionsDiv.innerHTML = "click on the country to place 1 soldiers on that country";
+  this.instructionsDiv.innerHTML =
+    "click on the country to place 1 soldiers on that country";
   this.rotatePlayers();
+  this.board.update();
+  debugger; 
   var totalSoldiers = numberToPlace;
   if(totalSoldiers > 0){
     totalSoldiers -= 1;
-    this.players.currentPlayer.placeSoldiers(1, this.placeSecondSoldiers, totalSoldiers );
+    this.players[this.currentPlayer].placeSoldiers(1, this.placeSecondSoldiers.bind(this), totalSoldiers);
   }else {
     this.fightWars(0);
   }
@@ -210,7 +220,8 @@ Game.prototype.toMoveMen = function(){
 };
 
 Game.prototype.moveMen = function(){
- this.instructionsDiv.innerHTML = "click on which country you want to move men from and then to which to move. It will move one solider per click";
+ this.instructionsDiv.innerHTML =
+  "click on which country you want to move men from and then to which to move. It will move one solider per click";
   this.players[this.currentPlayer].moveMen();
   //takes in input to move men from given country to another country.
 };

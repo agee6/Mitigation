@@ -28,7 +28,7 @@ function Board(){
     Hispania.addConnection(NorthAmerica, Africa);
     MiddleEast.addConnection(Africa, Europe, Asia);
     Australia.addConnection(Asia);
-
+    
     this.countries.push(Africa);
     this.countries.push(Asia);
     this.countries.push(Europe);
@@ -36,6 +36,33 @@ function Board(){
     this.countries.push(Hispania);
     this.countries.push(MiddleEast);
     this.countries.push(Australia);
+    this.unclaimedCountries = this.countries.slice();
 }
+Board.prototype.update = function(){
+
+  for (var i = 0; i < this.countries.length; i++) {
+    this.countries[i].update();
+  }
+
+};
+Board.prototype.removeUnclaimed = function(country){
+  var savedIdx;
+  for (var i = 0; i < this.unclaimedCountries.length; i++) {
+    if(this.unclaimedCountries[i] === country){
+      savedIdx = i;
+      break;
+    }
+  }
+  this.unclaimedCountries.splice(i, 1);
+};
+Board.prototype.getCountryByDiv = function(div){
+  for (var i = 0; i < this.countries.length; i++) {
+    if(this.countries[i].div === div){
+      return this.countries[i];
+    }
+  }
+};
+
+
 
 module.exports = Board;
