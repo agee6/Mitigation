@@ -33,7 +33,7 @@ War.prototype.updateSoldiers = function(attackMen, defenseMen){
 
 
 War.prototype.over = function(){
-  if(this.defender.men === 0){
+  if(this.defender.troops === 0){
     this.aggressor.owner.claimCountry(this.aggressor,this.defender);
     return true;
   }
@@ -41,8 +41,8 @@ War.prototype.over = function(){
   this.battles.forEach(function(battle){
     arrSum += battle;
   });
-  if(arrSum === 2){
-    this.aggressor.owner.claimCountry(this.defender);
+  if(arrSum >= 2){
+    this.aggressor.owner.claimCountry(this.aggressor, this.defender);
     return true;
   }
   if(this.battles.length === 3 ){

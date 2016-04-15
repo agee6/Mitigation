@@ -28,6 +28,7 @@ ComputerPlayer.prototype.placeSoldiers = function(num, callBack, totalSoldiers){
   var rIdx = Math.floor(Math.random()*(this.countriesOwned.length));
   var chosen = this.countriesOwned[rIdx];
   chosen.troops += num;
+
   callBack(totalSoldiers);
 };
 
@@ -42,18 +43,22 @@ ComputerPlayer.prototype.startWar = function(board, callback){
 };
 ComputerPlayer.prototype.wantToWar = function(callback){
   var choice = Math.random();
-  if(choice > 0.5 ){
+  if(choice > 0.6 ){
     callback(true);
   }else {
     callback(false);
   }
 };
+
+ComputerPlayer.prototype.moveMen = function(callback){
+  callback();
+};
 ComputerPlayer.prototype.getAttackSoldiers = function(war, index, callback){
-  var choice = Math.floor(Math.random() * war.aggressor.troops) + 1;
+  var choice = Math.floor(Math.random() * (war.aggressor.troops - 1)) + 1;
   callback(war, index, choice);
 };
 ComputerPlayer.prototype.getDefenseSoldiers = function(war, index, callback){
-  var choice = Math.floor(Math.random() * (war.defender.troops + 1)) + 1;
+  var choice = Math.floor(Math.random() * war.defender.troops) + 1;
   callback(war, index, choice);
 };
 

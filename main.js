@@ -21,7 +21,8 @@ var secondKick = function(event){
   closeModal(event);
 
   var game = new Game(UserName, 3);
-  submitName.removeEventListener('click', secondKick); 
+  submitName.removeEventListener('click', secondKick);
+  startButton.style.display = "none"; 
   game.startGame();
 };
 

@@ -67,7 +67,8 @@
 	  closeModal(event);
 
 	  var game = new Game(UserName, 3);
-	  submitName.removeEventListener('click', secondKick); 
+	  submitName.removeEventListener('click', secondKick);
+	  startButton.style.display = "none"; 
 	  game.startGame();
 	};
 
@@ -133,6 +134,7 @@
 	  // }
 	};
 	Game.prototype.fightWars = function(index){
+	  this.board.update();
 
 	  for (var i = index; i < this.currentWars.length; i++) {
 	    if(this.currentWars[i].isOffense(this.players[this.currentPlayer])){
@@ -140,7 +142,7 @@
 	      break;
 	    }
 	  }
-	  if(index >= this.currentWars.length || i > this.currentWars.length){
+	  if(index >= this.currentWars.length || i >= this.currentWars.length){
 	    this.players[this.currentPlayer].wantToWar(this.checkToWar.bind(this));
 
 	  }
@@ -164,33 +166,6 @@
 	Game.prototype.finishMove = function(){
 	  this.rotatePlayers();
 	  this.distributeSoldiers();
-
-	};
-
-	Game.prototype.playTurn = function(){
-
-	  // this.distributeSoldiers();
-	  var wantToWar = true;
-	  while (wantToWar){
-	    if(this.checkInitiateWar()){
-	      this.initiateWar();
-	      this.battle(this.currentWars[-1]);
-
-	    }else {
-	      wantToWar = false;
-	    }
-	  }
-	  var wantToMove = true;
-	  while(wantToMove){
-	    if(this.toMoveMen()){
-	      this.moveMen();
-	    }
-	    else{
-	      wantToMove = false;
-	    }
-	  }
-
-
 	};
 
 	Game.prototype.rotatePlayers = function(){
@@ -201,6 +176,7 @@
 	  'It is ' + this.players[this.currentPlayer].name + '\'s turn';
 
 	};
+
 	Game.prototype.startBattle = function(war, index){
 	  this.soldiersAttack = 0;
 	  this.soldiersDefend = 0;
@@ -208,6 +184,7 @@
 	  war.aggressor.owner.getAttackSoldiers(war, index, this.getDefense.bind(this));
 
 	};
+
 	Game.prototype.getDefense = function(war, index, attackSoldiers){
 	  this.soldiersAttack = attackSoldiers;
 
@@ -234,10 +211,8 @@
 	    index += 1;
 	    this.fightWars(index);
 	  }else{
-	    debugger;
-
+	    this.players[this.currentPlayer].wantToWar(this.checkToWar.bind(this));
 	  }
-
 	};
 
 
@@ -254,10 +229,8 @@
 	      this.players.push(Cplayer);
 	    }
 	  }
-
-	  //get the players
-
 	};
+
 	Game.prototype.setBoard = function(){
 	  //rotate through players, choosing countries.
 	  // this.rotatePlayers();
@@ -305,7 +278,7 @@
 	    this.players[this.currentPlayer].placeSoldiers(1, this.placeSecondSoldiers.bind(this), totalSoldiers);
 	  }else {
 	    this.instructionsDiv.innerHTML = "";
-	    this.fightWars(0);
+	    this.distributeSoldiers(0);
 	  }
 
 	};
@@ -313,11 +286,11 @@
 	Game.prototype.distributeSoldiers = function(){
 	  //player recieves and places soldiers on countries at the start of turn.
 	  //1 player per country?
+
 	  var numberPlayers = this.players[this.currentPlayer].numOwned();
 	  this.instructionsDiv.innerHTML = "Place your men on the board";
 	  this.players[this.currentPlayer].placeSoldiers(numberPlayers, this.fightWars.bind(this), 0);
 	};
-
 
 	Game.prototype.initiateWar = function(war){
 	  //creates new war object where current player is the aggressor and chooses
@@ -326,24 +299,6 @@
 	  this.currentWars.push(war);
 	  this.fightWars(this.currentWars.length-1);
 
-	};
-
-	Game.prototype.toMoveMen = function(){
-
-	  var moveMen = window.confirm("would you like to move soldiers?");
-	  if(moveMen){
-	    return true;
-	  }else{
-	    return false;
-	  }
-	  //checks if a user wants to move soldiers. returns boolean
-	};
-
-	Game.prototype.moveMen = function(){
-	 this.instructionsDiv.innerHTML =
-	  "click on which country you want to move men from and then to which to move. It will move one solider per click";
-	  this.players[this.currentPlayer].moveMen();
-	  //takes in input to move men from given country to another country.
 	};
 
 	Game.prototype.removeWar = function(war){
@@ -593,7 +548,7 @@
 	  var finishedMoving = function(event){
 	    if(oneClicked){
 	      for (var i = 0; i < placesToMove.length; i++) {
-	        placesToMove[i].removeEventListener('click', moveMen);
+	        placesToMove[i].div.removeEventListener('click', moveTheMen);
 	      }
 	    }else{
 	      for (var i = 0; i < that.countriesOwned.length; i++) {
@@ -602,7 +557,7 @@
 	      }
 
 	    }
-	    debugger;
+
 	    finishDiv.style.display = "none";
 	    finishDiv.removeEventListener('click', finishedMoving);
 	    callback();
@@ -610,10 +565,11 @@
 	  };
 
 
-	  var moveMen = function(event){
+	  var moveTheMen = function(event){
 	    var toDiv = event.target;
 	    toCountry = that.getCountryFromDiv(toDiv);
 	    fromCountry.troops -= numToMove;
+	    fromCountry.ableToMove -= numToMove; 
 	    toCountry.troops += numToMove;
 	    fromCountry.update();
 	    toCountry.update();
@@ -625,7 +581,7 @@
 	      }
 	    }
 	    for (var i = 0; i < placesToMove.length; i++) {
-	      placesToMove[i].div.removeEventListener('click', moveMen);
+	      placesToMove[i].div.removeEventListener('click', moveTheMen);
 	      placesToMove[i].div.classList.remove('glow');
 	    }
 	    placesToMove = [];
@@ -651,7 +607,7 @@
 	       that.countriesOwned[i].div.classList.remove('glow');
 	      }
 	      for (var i = 0; i < placesToMove.length; i++) {
-	        placesToMove[i].div.addEventListener('click', moveMen);
+	        placesToMove[i].div.addEventListener('click', moveTheMen);
 	        placesToMove[i].div.classList.add('glow');
 	      }
 	      oneClicked = true;
@@ -753,7 +709,7 @@
 	}
 
 	Player.prototype.claimCountry = function(fromCountry, toCountry){
-	  this.countries.Owned.push(toCountry);
+	  this.countriesOwned.push(toCountry);
 	  toCountry.owner.removeCountry(toCountry);
 	  toCountry.owner = this;
 	  //prompt to user to get number of soldiers to move from
@@ -824,6 +780,7 @@
 	  var rIdx = Math.floor(Math.random()*(this.countriesOwned.length));
 	  var chosen = this.countriesOwned[rIdx];
 	  chosen.troops += num;
+
 	  callBack(totalSoldiers);
 	};
 
@@ -838,18 +795,22 @@
 	};
 	ComputerPlayer.prototype.wantToWar = function(callback){
 	  var choice = Math.random();
-	  if(choice > 0.5 ){
+	  if(choice > 0.6 ){
 	    callback(true);
 	  }else {
 	    callback(false);
 	  }
 	};
+
+	ComputerPlayer.prototype.moveMen = function(callback){
+	  callback();
+	};
 	ComputerPlayer.prototype.getAttackSoldiers = function(war, index, callback){
-	  var choice = Math.floor(Math.random() * war.aggressor.troops) + 1;
+	  var choice = Math.floor(Math.random() * (war.aggressor.troops - 1)) + 1;
 	  callback(war, index, choice);
 	};
 	ComputerPlayer.prototype.getDefenseSoldiers = function(war, index, callback){
-	  var choice = Math.floor(Math.random() * (war.defender.troops + 1)) + 1;
+	  var choice = Math.floor(Math.random() * war.defender.troops) + 1;
 	  callback(war, index, choice);
 	};
 
@@ -896,7 +857,7 @@
 
 
 	War.prototype.over = function(){
-	  if(this.defender.men === 0){
+	  if(this.defender.troops === 0){
 	    this.aggressor.owner.claimCountry(this.aggressor,this.defender);
 	    return true;
 	  }
@@ -904,8 +865,8 @@
 	  this.battles.forEach(function(battle){
 	    arrSum += battle;
 	  });
-	  if(arrSum === 2){
-	    this.aggressor.owner.claimCountry(this.defender);
+	  if(arrSum >= 2){
+	    this.aggressor.owner.claimCountry(this.aggressor, this.defender);
 	    return true;
 	  }
 	  if(this.battles.length === 3 ){

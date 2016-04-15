@@ -122,7 +122,7 @@ HumanPlayer.prototype.moveMen = function(callback){
   var finishedMoving = function(event){
     if(oneClicked){
       for (var i = 0; i < placesToMove.length; i++) {
-        placesToMove[i].removeEventListener('click', moveMen);
+        placesToMove[i].div.removeEventListener('click', moveTheMen);
       }
     }else{
       for (var i = 0; i < that.countriesOwned.length; i++) {
@@ -131,7 +131,7 @@ HumanPlayer.prototype.moveMen = function(callback){
       }
 
     }
-    debugger;
+
     finishDiv.style.display = "none";
     finishDiv.removeEventListener('click', finishedMoving);
     callback();
@@ -139,10 +139,11 @@ HumanPlayer.prototype.moveMen = function(callback){
   };
 
 
-  var moveMen = function(event){
+  var moveTheMen = function(event){
     var toDiv = event.target;
     toCountry = that.getCountryFromDiv(toDiv);
     fromCountry.troops -= numToMove;
+    fromCountry.ableToMove -= numToMove; 
     toCountry.troops += numToMove;
     fromCountry.update();
     toCountry.update();
@@ -154,7 +155,7 @@ HumanPlayer.prototype.moveMen = function(callback){
       }
     }
     for (var i = 0; i < placesToMove.length; i++) {
-      placesToMove[i].div.removeEventListener('click', moveMen);
+      placesToMove[i].div.removeEventListener('click', moveTheMen);
       placesToMove[i].div.classList.remove('glow');
     }
     placesToMove = [];
@@ -180,7 +181,7 @@ HumanPlayer.prototype.moveMen = function(callback){
        that.countriesOwned[i].div.classList.remove('glow');
       }
       for (var i = 0; i < placesToMove.length; i++) {
-        placesToMove[i].div.addEventListener('click', moveMen);
+        placesToMove[i].div.addEventListener('click', moveTheMen);
         placesToMove[i].div.classList.add('glow');
       }
       oneClicked = true;

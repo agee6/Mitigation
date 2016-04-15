@@ -5,7 +5,7 @@ function Player(name){
 }
 
 Player.prototype.claimCountry = function(fromCountry, toCountry){
-  this.countries.Owned.push(toCountry);
+  this.countriesOwned.push(toCountry);
   toCountry.owner.removeCountry(toCountry);
   toCountry.owner = this;
   //prompt to user to get number of soldiers to move from
