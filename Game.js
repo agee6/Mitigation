@@ -51,8 +51,16 @@ Game.prototype.checkToWar = function(toFightWar){
     this.players[this.currentPlayer].startWar(this.board, this.initiateWar.bind(this));
 
   }else{
-    this.players[this.currentPlayer].wantToMove( this.checkToMove.bind(this));
+    this.instructionsDiv.innerHTML =
+     "click on which country you want to move men from and then to which to move. It will move one solider per click";
+
+    this.players[this.currentPlayer].moveMen( this.finishMove.bind(this));
   }
+
+};
+Game.prototype.finishMove = function(){
+  this.rotatePlayers();
+  this.distributeSoldiers();
 
 };
 
@@ -94,27 +102,31 @@ Game.prototype.startBattle = function(war, index){
   this.soldiersAttack = 0;
   this.soldiersDefend = 0;
   this.instructionsDiv.innerHTML = "";
-  war.aggressor.owner.getAttackSoldiers(war, index, this.getDefense);
+  war.aggressor.owner.getAttackSoldiers(war, index, this.getDefense.bind(this));
 
 };
 Game.prototype.getDefense = function(war, index, attackSoldiers){
   this.soldiersAttack = attackSoldiers;
-  debugger;
-  war.defender.owner.getDefenseSoldiers(war, index, this.battle);
+
+  war.defender.owner.getDefenseSoldiers(war, index, this.battle.bind(this));
 };
 
 Game.prototype.battle = function(war, index, defenseSoldiers){
   this.soldiersDefend = defenseSoldiers;
+
   if(this.soldiersAttack > this.soldiersDefend){
     war.addAttackVictory();
+    alert(war.aggressor.owner.name + " has won the battle!");
   }else {
     war.addDefenseVictory();
+    alert(war.defender.owner.name + " has won the battle!");
   }
   war.updateSoldiers(this.soldiersAttack, this.soldiersDefend);
   if(war.over()){
 
     this.removeWar(war);
   }
+  this.board.update();
   if(index < this.currentWars.length){
     index += 1;
     this.fightWars(index);
@@ -127,7 +139,7 @@ Game.prototype.battle = function(war, index, defenseSoldiers){
 
 
 Game.prototype.getPlayers = function(){
-  var computerNames = ['Nicolas Cage', 'Anitta Job', 'Darth Bird', 'Legolas'];
+  var computerNames = ['Nicolas Cage', 'Anita Job', 'Darth Bird', 'Legolas'];
   for (var i = 0; i < this.numPlayers; i++) {
 
     if(this.playersName !== null){
@@ -200,7 +212,7 @@ Game.prototype.distributeSoldiers = function(){
   //1 player per country?
   var numberPlayers = this.players[this.currentPlayer].numOwned();
   this.instructionsDiv.innerHTML = "Place your men on the board";
-  this.players[this.currenPlayer].placeSoldiers(numberPlayers);
+  this.players[this.currentPlayer].placeSoldiers(numberPlayers, this.fightWars.bind(this), 0);
 };
 
 

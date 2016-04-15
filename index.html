@@ -8,7 +8,10 @@
   </head>
   <body>
     <button id="main-button">Begin Game!</button>
-    <div id='instruction-div'></div>
+    <div id='instruction-area'>
+      <div id='instruction-div'></div>
+      <div id='warning-div'></div>
+    </div>
     <div id="turnDiv"></div>
     <div id="myModal" class="modal">
       <div class="modal-content">
@@ -44,6 +47,8 @@
       <div class="country" id=Africa> owner: blank troops: 0</div>
       <div class="country" id=Australia> owner: blank troops: 0</div>
       <div class="country" id=Asia>owner: blank troops: 0</div>
+
+      <div class="finished-moving" id="finished-moving" display="none">Done Moving Men</div>
 
     </div>
 

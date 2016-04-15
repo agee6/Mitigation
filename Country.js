@@ -5,13 +5,14 @@ function Country(div){
   this.troops = 0;
   this.connections = [];
   this.div = div;
+  this.ableToMove = 0;
 }
 
 Country.prototype.addConnection = function(){
   this.connections = this.connections.concat(arguments);
 };
 Country.prototype.neighbors = function(){
-  return(this.connections); 
+  return(this.connections);
 };
 
 Country.prototype.update = function(){
@@ -20,5 +21,8 @@ Country.prototype.update = function(){
     this.div.innerHTML = inner;
 
   }
+};
+Country.prototype.resetAbleToMove = function(){
+  this.ableToMove = this.troops - 1; 
 };
 module.exports = Country;
