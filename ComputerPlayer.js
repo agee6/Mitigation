@@ -33,21 +33,39 @@ ComputerPlayer.prototype.placeSoldiers = function(num, callBack, totalSoldiers){
 };
 
 ComputerPlayer.prototype.startWar = function(board, callback){
-  var rIdx = Math.floor(Math.random()*(this.countriesOwned.length));
-  var chosen = this.countriesOwned[rIdx];
-  var r2idx = Math.floor(Math.random()*(chosen.connections[0].length));
-  var defendor = chosen.connections[0][r2idx];
+  var rIdx = Math.floor(Math.random()*(this.ableToFight.length));
+  var chosen = this.ableToFight[rIdx];
+  var r2idx = Math.floor(Math.random()*(chosen.ableToFight().length));
+  var defendor = chosen.ableToFight()[r2idx];
   var war = new War(chosen, defendor);
+  this.addOWar(war);
+  defendor.addDWar(war);
   callback(war);
 
 };
+
 ComputerPlayer.prototype.wantToWar = function(callback){
   var choice = Math.random();
-  if(choice > 0.6 ){
-    callback(true);
-  }else {
-    callback(false);
+  var ableToWar = false;
+  this.ableToFight = [];
+  for (var i = 0; i < this.countriesOwned.length; i++) {
+    if(this.countriesOwned[i].ableToFight()){
+      this.ableToFight.push(this.countriesOwned[i]);
+      ableToWar = true;
+    }
   }
+
+  if(!ableToWar){
+    callback(false);
+  }else{
+    if(choice > 0.5 ){
+      callback(true);
+    }else {
+      callback(false);
+    }
+
+  }
+
 };
 
 ComputerPlayer.prototype.moveMen = function(callback){

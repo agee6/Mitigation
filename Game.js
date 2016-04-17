@@ -98,9 +98,16 @@ Game.prototype.battle = function(war, index, defenseSoldiers){
     alert(war.defender.owner.name + " has won the battle!");
   }
   war.updateSoldiers(this.soldiersAttack, this.soldiersDefend);
+var defense = war.defender.owner;
   if(war.over()){
-
+    if(defense.numOwned() === 0){
+      this.removePlayer(defense);
+    }
     this.removeWar(war);
+
+    if(this.numPlayers === 1){
+      this.gameOver();
+    }
   }
   this.board.update();
   if(index < this.currentWars.length){
@@ -111,6 +118,13 @@ Game.prototype.battle = function(war, index, defenseSoldiers){
   }
 };
 
+Game.prototype.removePlayer = function(player){
+  var index = this.players.indexOf(player);
+  if (index >= 0) {
+    this.players.splice( index, 1 );
+  }
+  this.numPlayers -= 1;
+};
 
 Game.prototype.getPlayers = function(){
   var computerNames = ['Nicolas Cage', 'Anita Job', 'Darth Bird', 'Legolas'];
@@ -198,11 +212,18 @@ Game.prototype.initiateWar = function(war){
 };
 
 Game.prototype.removeWar = function(war){
+  war.aggressor.owner.removeOWar(war);
+  war.defender.owner.removeDWar(war); 
 
   var index = this.currentWars.indexOf(war);
   if (index >= 0) {
     this.currentWars.splice( index, 1 );
   }
+};
+
+Game.prototype.gameOver = function(){
+  this.warningDiv.innerHTML =
+    "congrats " + this.players[0].name + " you have conquered the world";
 };
 
 module.exports = Game;

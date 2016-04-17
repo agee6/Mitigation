@@ -202,9 +202,16 @@
 	    alert(war.defender.owner.name + " has won the battle!");
 	  }
 	  war.updateSoldiers(this.soldiersAttack, this.soldiersDefend);
+	var defense = war.defender.owner;
 	  if(war.over()){
-
+	    if(defense.numOwned() === 0){
+	      this.removePlayer(defense);
+	    }
 	    this.removeWar(war);
+
+	    if(this.numPlayers === 1){
+	      this.gameOver();
+	    }
 	  }
 	  this.board.update();
 	  if(index < this.currentWars.length){
@@ -215,6 +222,13 @@
 	  }
 	};
 
+	Game.prototype.removePlayer = function(player){
+	  var index = this.players.indexOf(player);
+	  if (index >= 0) {
+	    this.players.splice( index, 1 );
+	  }
+	  this.numPlayers -= 1;
+	};
 
 	Game.prototype.getPlayers = function(){
 	  var computerNames = ['Nicolas Cage', 'Anita Job', 'Darth Bird', 'Legolas'];
@@ -302,11 +316,18 @@
 	};
 
 	Game.prototype.removeWar = function(war){
+	  war.aggressor.owner.removeOWar(war);
+	  war.defender.owner.removeDWar(war); 
 
 	  var index = this.currentWars.indexOf(war);
 	  if (index >= 0) {
 	    this.currentWars.splice( index, 1 );
 	  }
+	};
+
+	Game.prototype.gameOver = function(){
+	  this.warningDiv.innerHTML =
+	    "congrats " + this.players[0].name + " you have conquered the world";
 	};
 
 	module.exports = Game;
@@ -401,8 +422,14 @@
 	}
 
 	Country.prototype.addConnection = function(){
-	  this.connections = this.connections.concat(arguments);
+
+	  // this.connections = this.connections.concat(arguments);
+	  for (var i = 0; i < arguments.length; i++) {
+	      this.connections.push(arguments[i]);
+	  }
+
 	};
+
 	Country.prototype.neighbors = function(){
 	  return(this.connections);
 	};
@@ -415,8 +442,27 @@
 	  }
 	};
 	Country.prototype.resetAbleToMove = function(){
-	  this.ableToMove = this.troops - 1; 
+	  this.ableToMove = this.troops - 1;
 	};
+	Country.prototype.ableToFight = function(){
+	  var neighborsToFight = [];
+	  if(this.troops < 2){
+	    return false;
+	  }else{
+	    for (var i = 0; i < this.connections.length; i++) {
+
+	      if(this.connections[i].owner !== this.owner && !this.owner.inWarWith(this.connections[i])){
+	        neighborsToFight.push(this.connections[i]);
+	      }
+	    }
+	    if(neighborsToFight.length > 0){
+	      return(neighborsToFight);
+	    }else{
+	      return false;
+	    }
+	  }
+	};
+
 	module.exports = Country;
 
 
@@ -493,20 +539,20 @@
 	  var setAttack = function(event){
 	    var attackDiv = event.target;
 	    attacker = board.getCountryByDiv(attackDiv);
-	    for (var i = 0; i < that.countriesOwned.length; i++) {
-	      that.countriesOwned[i].div.removeEventListener('click',setAttack);
-	      that.countriesOwned[i].div.classList.remove('glow');
+	    for (var i = 0; i < that.ableToFight.length; i++) {
+	      that.ableToFight[i].div.removeEventListener('click',setAttack);
+	      that.ableToFight[i].div.classList.remove('glow');
 	    }
 	    setDefense();
 	  };
-	  for (var i = 0; i < this.countriesOwned.length; i++) {
-	    this.countriesOwned[i].div.addEventListener('click',setAttack);
-	    this.countriesOwned[i].div.classList.add('glow');
+	  for (var i = 0; i < this.ableToFight.length; i++) {
+	    this.ableToFight[i].div.addEventListener('click',setAttack);
+	    this.ableToFight[i].div.classList.add('glow');
 	  }
 	  var setDefense = function(){
-	    for (var j = 0; j < attacker.connections[0].length; j++) {
-	      attacker.connections[0][j].div.addEventListener('click', sendAttack);
-	      attacker.connections[0][j].div.classList.add('glow');
+	    for (var j = 0; j < attacker.ableToFight().length; j++) {
+	      attacker.ableToFight()[j].div.addEventListener('click', sendAttack);
+	      attacker.ableToFight()[j].div.classList.add('glow');
 	    }
 	    document.getElementById('instruction-div').innerHTML =
 	      "Choose which country you would like to attack";
@@ -515,26 +561,41 @@
 	  var sendAttack = function(){
 	    var defenseDiv = event.target;
 	    defender = board.getCountryByDiv(defenseDiv);
-	    for (var j = 0; j < attacker.connections[0].length; j++) {
-	      attacker.connections[0][j].div.removeEventListener('click', sendAttack);
-	      attacker.connections[0][j].div.classList.remove('glow');
+	    for (var j = 0; j < attacker.ableToFight().length; j++) {
+	      attacker.ableToFight()[j].div.removeEventListener('click', sendAttack);
+	      attacker.ableToFight()[j].div.classList.remove('glow');
 	    }
 
 	    var war = new War(attacker, defender);
+	    that.addOWar(war);
+	    defender.owner.addDWar(war);
 	    callback(war);
 
 	  };
 	};
 
 	HumanPlayer.prototype.wantToWar = function(callback){
-	  var stay = window.confirm("would you like to initiate a War?");
-
-	  if(stay){
-	    callback(true);
-	  }else{
+	  var ableToWar = false;
+	  this.ableToFight = [];
+	  for (var i = 0; i < this.countriesOwned.length; i++) {
+	    if(this.countriesOwned[i].ableToFight()){
+	      this.ableToFight.push(this.countriesOwned[i]);
+	      ableToWar = true;
+	    }
+	  }
+	  if(!ableToWar){
 	    callback(false);
+	  }else{
+	    var stay = window.confirm("would you like to initiate a War?");
+
+	    if(stay){
+	      callback(true);
+	    }else{
+	      callback(false);
+	    }
 	  }
 	};
+
 	HumanPlayer.prototype.moveMen = function(callback){
 	  var finishDiv = document.getElementById('finished-moving');
 	  var fromCountry;
@@ -569,7 +630,7 @@
 	    var toDiv = event.target;
 	    toCountry = that.getCountryFromDiv(toDiv);
 	    fromCountry.troops -= numToMove;
-	    fromCountry.ableToMove -= numToMove; 
+	    fromCountry.ableToMove -= numToMove;
 	    toCountry.troops += numToMove;
 	    fromCountry.update();
 	    toCountry.update();
@@ -591,10 +652,10 @@
 	    var fromDiv = event.target;
 	    fromCountry = that.getCountryFromDiv(fromDiv);
 	    var hasToMove = false;
-	    for (var i = 0; i < fromCountry.connections[0].length; i++) {
-	      if(fromCountry.connections[0][i].owner === that){
+	    for (var i = 0; i < fromCountry.connections.length; i++) {
+	      if(fromCountry.connections[i].owner === that){
 	        hasToMove = true;
-	        placesToMove.push(fromCountry.connections[0][i]);
+	        placesToMove.push(fromCountry.connections[i]);
 	      }
 	    }
 
@@ -705,13 +766,21 @@
 	function Player(name){
 	  this.countriesOwned = [];
 	  this.name = name;
+	  this.ableToFight = [];
+	  this.currentOffensiveWars = [];
+	  this.defending = [];
 
 	}
 
 	Player.prototype.claimCountry = function(fromCountry, toCountry){
+	  
 	  this.countriesOwned.push(toCountry);
 	  toCountry.owner.removeCountry(toCountry);
 	  toCountry.owner = this;
+	  if(toCountry.troops < 1){
+	    fromCountry.troops -=1;
+	    toCountry.troops += 1;
+	  }
 	  //prompt to user to get number of soldiers to move from
 	  //fromCountry to toCountry
 	};
@@ -723,6 +792,31 @@
 	};
 	Player.prototype.numOwned = function(){
 	  return this.countriesOwned.length;
+	};
+	Player.prototype.addOWar = function(war){
+	  this.currentOffensiveWars.push(war);
+	};
+	Player.prototype.addDWar = function(war){
+	  this.defending.push(war);
+	};
+	Player.prototype.removeOWar = function(war){
+
+	};
+	Player.prototype.removeDWar = function(war){
+
+	};
+	Player.prototype.inWarWith = function(country){
+	  for (var i = 0; i < this.currentOffensiveWars.length; i++) {
+	    if(this.currentOffensiveWars[i].defender === country){
+	      return true;
+	    }
+	  }
+	  for (var j = 0; j < this.defending.length; j++) {
+	    if(this.defending[j].aggressor === country){
+	      return true;
+	    }
+	  }
+	  return false;
 	};
 
 	module.exports = Player;
@@ -785,21 +879,39 @@
 	};
 
 	ComputerPlayer.prototype.startWar = function(board, callback){
-	  var rIdx = Math.floor(Math.random()*(this.countriesOwned.length));
-	  var chosen = this.countriesOwned[rIdx];
-	  var r2idx = Math.floor(Math.random()*(chosen.connections[0].length));
-	  var defendor = chosen.connections[0][r2idx];
+	  var rIdx = Math.floor(Math.random()*(this.ableToFight.length));
+	  var chosen = this.ableToFight[rIdx];
+	  var r2idx = Math.floor(Math.random()*(chosen.ableToFight().length));
+	  var defendor = chosen.ableToFight()[r2idx];
 	  var war = new War(chosen, defendor);
+	  this.addOWar(war);
+	  defendor.addDWar(war);
 	  callback(war);
 
 	};
+
 	ComputerPlayer.prototype.wantToWar = function(callback){
 	  var choice = Math.random();
-	  if(choice > 0.6 ){
-	    callback(true);
-	  }else {
-	    callback(false);
+	  var ableToWar = false;
+	  this.ableToFight = [];
+	  for (var i = 0; i < this.countriesOwned.length; i++) {
+	    if(this.countriesOwned[i].ableToFight()){
+	      this.ableToFight.push(this.countriesOwned[i]);
+	      ableToWar = true;
+	    }
 	  }
+
+	  if(!ableToWar){
+	    callback(false);
+	  }else{
+	    if(choice > 0.5 ){
+	      callback(true);
+	    }else {
+	      callback(false);
+	    }
+
+	  }
+
 	};
 
 	ComputerPlayer.prototype.moveMen = function(callback){

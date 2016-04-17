@@ -67,20 +67,20 @@ HumanPlayer.prototype.startWar = function(board, callback){
   var setAttack = function(event){
     var attackDiv = event.target;
     attacker = board.getCountryByDiv(attackDiv);
-    for (var i = 0; i < that.countriesOwned.length; i++) {
-      that.countriesOwned[i].div.removeEventListener('click',setAttack);
-      that.countriesOwned[i].div.classList.remove('glow');
+    for (var i = 0; i < that.ableToFight.length; i++) {
+      that.ableToFight[i].div.removeEventListener('click',setAttack);
+      that.ableToFight[i].div.classList.remove('glow');
     }
     setDefense();
   };
-  for (var i = 0; i < this.countriesOwned.length; i++) {
-    this.countriesOwned[i].div.addEventListener('click',setAttack);
-    this.countriesOwned[i].div.classList.add('glow');
+  for (var i = 0; i < this.ableToFight.length; i++) {
+    this.ableToFight[i].div.addEventListener('click',setAttack);
+    this.ableToFight[i].div.classList.add('glow');
   }
   var setDefense = function(){
-    for (var j = 0; j < attacker.connections[0].length; j++) {
-      attacker.connections[0][j].div.addEventListener('click', sendAttack);
-      attacker.connections[0][j].div.classList.add('glow');
+    for (var j = 0; j < attacker.ableToFight().length; j++) {
+      attacker.ableToFight()[j].div.addEventListener('click', sendAttack);
+      attacker.ableToFight()[j].div.classList.add('glow');
     }
     document.getElementById('instruction-div').innerHTML =
       "Choose which country you would like to attack";
@@ -89,26 +89,41 @@ HumanPlayer.prototype.startWar = function(board, callback){
   var sendAttack = function(){
     var defenseDiv = event.target;
     defender = board.getCountryByDiv(defenseDiv);
-    for (var j = 0; j < attacker.connections[0].length; j++) {
-      attacker.connections[0][j].div.removeEventListener('click', sendAttack);
-      attacker.connections[0][j].div.classList.remove('glow');
+    for (var j = 0; j < attacker.ableToFight().length; j++) {
+      attacker.ableToFight()[j].div.removeEventListener('click', sendAttack);
+      attacker.ableToFight()[j].div.classList.remove('glow');
     }
 
     var war = new War(attacker, defender);
+    that.addOWar(war);
+    defender.owner.addDWar(war);
     callback(war);
 
   };
 };
 
 HumanPlayer.prototype.wantToWar = function(callback){
-  var stay = window.confirm("would you like to initiate a War?");
-
-  if(stay){
-    callback(true);
-  }else{
+  var ableToWar = false;
+  this.ableToFight = [];
+  for (var i = 0; i < this.countriesOwned.length; i++) {
+    if(this.countriesOwned[i].ableToFight()){
+      this.ableToFight.push(this.countriesOwned[i]);
+      ableToWar = true;
+    }
+  }
+  if(!ableToWar){
     callback(false);
+  }else{
+    var stay = window.confirm("would you like to initiate a War?");
+
+    if(stay){
+      callback(true);
+    }else{
+      callback(false);
+    }
   }
 };
+
 HumanPlayer.prototype.moveMen = function(callback){
   var finishDiv = document.getElementById('finished-moving');
   var fromCountry;
@@ -143,7 +158,7 @@ HumanPlayer.prototype.moveMen = function(callback){
     var toDiv = event.target;
     toCountry = that.getCountryFromDiv(toDiv);
     fromCountry.troops -= numToMove;
-    fromCountry.ableToMove -= numToMove; 
+    fromCountry.ableToMove -= numToMove;
     toCountry.troops += numToMove;
     fromCountry.update();
     toCountry.update();
@@ -165,10 +180,10 @@ HumanPlayer.prototype.moveMen = function(callback){
     var fromDiv = event.target;
     fromCountry = that.getCountryFromDiv(fromDiv);
     var hasToMove = false;
-    for (var i = 0; i < fromCountry.connections[0].length; i++) {
-      if(fromCountry.connections[0][i].owner === that){
+    for (var i = 0; i < fromCountry.connections.length; i++) {
+      if(fromCountry.connections[i].owner === that){
         hasToMove = true;
-        placesToMove.push(fromCountry.connections[0][i]);
+        placesToMove.push(fromCountry.connections[i]);
       }
     }
 
