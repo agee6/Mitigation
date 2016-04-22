@@ -39,7 +39,7 @@ ComputerPlayer.prototype.startWar = function(board, callback){
   var defendor = chosen.ableToFight()[r2idx];
   var war = new War(chosen, defendor);
   this.addOWar(war);
-  defendor.addDWar(war);
+  defendor.owner.addDWar(war);
   callback(war);
 
 };
