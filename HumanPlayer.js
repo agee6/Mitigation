@@ -32,7 +32,7 @@ HumanPlayer.prototype.claimUnclaimed = function(board, callBack){
 
 };
 
-HumanPlayer.prototype.placeSoldiers = function(num, callBack, soldiersRemaining){
+HumanPlayer.prototype.placeSoldiers = function(num,callBack,soldiersRemaining){
 
   var that = this;
   var addMen = function(event){
@@ -48,9 +48,8 @@ HumanPlayer.prototype.placeSoldiers = function(num, callBack, soldiersRemaining)
   for (var i = 0; i < this.countriesOwned.length; i++) {
     this.countriesOwned[i].div.addEventListener('click',addMen);
   }
-
-
 };
+
 HumanPlayer.prototype.getCountryFromDiv = function(div){
   for (var i = 0; i < this.countriesOwned.length; i++) {
     if(this.countriesOwned[i].div === div){
@@ -84,8 +83,8 @@ HumanPlayer.prototype.startWar = function(board, callback){
     }
     document.getElementById('instruction-div').innerHTML =
       "Choose which country you would like to attack";
-
   };
+
   var sendAttack = function(){
     var defenseDiv = event.target;
     defender = board.getCountryByDiv(defenseDiv);
@@ -98,8 +97,8 @@ HumanPlayer.prototype.startWar = function(board, callback){
     that.addOWar(war);
     defender.owner.addDWar(war);
     callback(war);
-
   };
+
 };
 
 HumanPlayer.prototype.wantToWar = function(callback){

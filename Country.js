@@ -6,15 +6,15 @@ function Country(div){
   this.connections = [];
   this.div = div;
   this.ableToMove = 0;
+  this.fighting = [];
+  this.defending = [];
 }
 
 Country.prototype.addConnection = function(){
-
   // this.connections = this.connections.concat(arguments);
   for (var i = 0; i < arguments.length; i++) {
       this.connections.push(arguments[i]);
   }
-
 };
 
 Country.prototype.neighbors = function(){
@@ -25,12 +25,20 @@ Country.prototype.update = function(){
   if(this.owner !== null){
     var inner = "owner: " + this.owner.name +  " troops: " + this.troops;
     this.div.innerHTML = inner;
-
   }
 };
+
+Country.prototype.fightWars = function(callback, indexOne, indexCurrent){
+  for (var i = indexCurrent; i < this.wars.length; i++) {
+    callback(this.wars[i], i);
+    break;
+  }
+};
+
 Country.prototype.resetAbleToMove = function(){
   this.ableToMove = this.troops - 1;
 };
+
 Country.prototype.ableToFight = function(){
   var neighborsToFight = [];
   if(this.troops < 2){
@@ -49,5 +57,14 @@ Country.prototype.ableToFight = function(){
     }
   }
 };
+
+Country.prototype.addFight = function(country){
+  this.fighting.push(country);
+};
+
+Country.prototype.addDefend = function(country){
+  this.defending.push(country);
+};
+
 
 module.exports = Country;
