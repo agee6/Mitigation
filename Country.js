@@ -18,7 +18,30 @@ Country.prototype.addConnection = function(){
 };
 
 Country.prototype.neighbors = function(){
-  return(this.connections);
+  var neighborArr = [];
+  for (var i = 0; i < this.connections.length; i++) {
+    neighborArr.push(this.connections[i].getNeighbor(this));
+  }
+  return(neighborArr);
+};
+
+Country.prototype.getFriendlyNeighbors = function(){
+  var friendly = [];
+  for (var i = 0; i < this.connections.length; i++) {
+      if(this.connections[i].friendly){
+        friendly.push(this.connections[i].getNeighbor(this));
+      }
+  }
+  return friendly;
+};
+
+Country.prototype.getEnemyNeighbors = function(){
+  var enemies = [];
+  for (var i = 0; i < this.connections.length; i++) {
+    if(!this.connections[i].friendly){
+      enemies.push(this.connections[i].getNeighbor(this));
+    }
+  }
 };
 
 Country.prototype.update = function(){
@@ -35,27 +58,27 @@ Country.prototype.fightWars = function(callback, indexOne, indexCurrent){
   }
 };
 
+Country.prototype.resetFriendly = function(){
+  this.connections.forEach(function(connection){
+    connection.updateFriendly();
+  });
+};
+
 Country.prototype.resetAbleToMove = function(){
   this.ableToMove = this.troops - 1;
 };
 
 Country.prototype.ableToFight = function(){
-  var neighborsToFight = [];
   if(this.troops < 2){
     return false;
-  }else{
-    for (var i = 0; i < this.connections.length; i++) {
-
-      if(this.connections[i].owner !== this.owner && !this.owner.inWarWith(this.connections[i])){
-        neighborsToFight.push(this.connections[i]);
-      }
-    }
-    if(neighborsToFight.length > 0){
-      return(neighborsToFight);
-    }else{
-      return false;
+  }
+  var enemies = this.getEnemyNeighbors();
+  for (var i = 0; i < enemies.length; i++) {
+    if(enemies[i].atWar === false){
+      return true;
     }
   }
+  return false;
 };
 
 Country.prototype.addFight = function(country){

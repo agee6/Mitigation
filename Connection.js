@@ -22,4 +22,6 @@ Connection.prototype.updateWar = function(war){
 Connection.prototype.endWar = function(){
   this.atWar = false;
   this.updateFriendly();
-}; 
+};
+
+module.exports = Connection; 

@@ -26,6 +26,7 @@ HumanPlayer.prototype.claimUnclaimed = function(board, callBack){
 
     callBack();
   };
+
   for (var i = 0; i < countriesToAdd.length; i++) {
     countriesToAdd[i].div.addEventListener('click', addCountry);
   }

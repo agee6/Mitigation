@@ -24,6 +24,8 @@ Game.prototype.startGame = function(){
 };
 
 Game.prototype.getPlayers = function(){
+
+  // Add code here that will connect to players using the pluggins. Need to figure this out this week, asap.
   var computerNames = ['Nicolas Cage', 'Anita Job', 'Darth Bird', 'Legolas'];
   for (var i = 0; i < this.numPlayers; i++) {
     if(this.playersName !== null){
@@ -44,8 +46,10 @@ Game.prototype.setBoard = function(){
   instructionDiv.innerHTML =
     "Please click on the country of your choice when it is your turn";
 
+
   if(this.board.unclaimedCountries.length> 0 ){
     this.players[this.currentPlayer].claimUnclaimed(this.board, this.setBoard.bind(this));
+    debugger; 
   }else {
     this.placeFirstSoldiers(50);
   }
